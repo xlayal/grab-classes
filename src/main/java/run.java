@@ -10,21 +10,21 @@ import java.util.Map;
 
 public class run {
 
-    private static final String  DATA_PATH  = "c://Users//public//";
-    private static final String  GRAB_URL   = "http://10.10.240.34/xsxjs.aspx";
-    private static final Integer SLEEP_TIME = 200;
+    private static final String  DATA_PATH   = "c://Users//public//";
+    private static final String  GRAB_URL    = "http://10.10.240.34/xsxjs.aspx";
+    private static final Integer SLEEP_TIME  = 200;
 
     private static class worker extends Thread {
 
-        private String readText(int i){
-            File file = new File(DATA_PATH + "data"+String.valueOf(i)+".txt");
+        private String readText(int i) {
+            File file = new File(DATA_PATH + "data" + String.valueOf(i) + ".txt");
             StringBuilder res = new StringBuilder();
             BufferedReader reader = null;
             try {
                 reader = new BufferedReader(new java.io.FileReader(file));
                 String tempString = null;
                 while ((tempString = reader.readLine()) != null) {
-                    res.append(tempString+"\n");
+                    res.append(tempString + "\n");
                 }
                 reader.close();
                 return res.toString();
@@ -36,16 +36,16 @@ public class run {
 
         private HashMap<String, String> getFileData(int i) {
             String res = readText(i);
-            HashMap<String, String> map = new HashMap<String,String>(16);
-            for (String temp : res.split("\n")){
+            HashMap<String, String> map = new HashMap<String, String>(16);
+            for (String temp : res.split("\n")) {
                 String[] str = temp.split("::");
-                map.put(str[0],str[1]);
+                map.put(str[0], str[1]);
             }
             return map;
         }
 
-        private String doPost(Map<String,String> param,String url,String Cookie) throws IOException {
-            Connection con = Jsoup.connect(url).timeout(6000);
+        private String doPost(Map<String, String> param, String url, String Cookie) throws IOException {
+            Connection con = Jsoup.connect(url).timeout(12000);
             param.forEach(con::data);
             con.header("Cookie", Cookie);
             Document doc = con.post();
@@ -55,6 +55,7 @@ public class run {
         int workerId = 0;
 
         private worker(int id) {
+            System.out.println(id);
             this.workerId = id;
         }
 
@@ -73,7 +74,7 @@ public class run {
 
             while (true) {
                 try {
-                    result = doPost(param,url,cookie);
+                    result = doPost(param, url, cookie);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -82,7 +83,7 @@ public class run {
                 //获取请求结果，即提取alert内容
                 result = result.substring(result.indexOf("alert(") + 7, result.indexOf("</script>") - 3);
                 //打印
-                System.out.println("工人:" + workerId + " 返回结果：" + result + count + title);
+                System.out.println("工人:" + workerId + " 返回结果：" + result + " 执行次数："+count + title);
                 //抢课成功
                 if (result.indexOf("成功") > 0)
                     break;
@@ -102,7 +103,7 @@ public class run {
 
         int fileCount = 1;
         while (new File(DATA_PATH + "data" + fileCount + ".txt").exists()) {
-            new worker(fileCount).run();
+            new worker(fileCount).start();
             fileCount++;
         }
 
